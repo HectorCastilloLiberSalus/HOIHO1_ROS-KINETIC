@@ -1,0 +1,61 @@
+<launch>
+ <!-- reco -->
+  <arg name="launch_face_detection" default="true" />
+  <arg name="launch_trainer" default="true" />
+
+  <arg name="use_opencv3" default="false" />
+  <arg name="use_opencv3_1" default="false" />
+  <arg name="use_opencv3_2" default="false" />
+  <arg name="debug_view" default="true" />
+
+  <arg name="image" default="/usb_cam/image_raw" />
+  <arg name="data_dir" default="~/.ros/opencv_apps/face_data" />
+
+  <node name = "usb_cam" pkg = "usb_cam" type = "usb_cam_node"/>
+  <node name = "face_detection" pkg = "opencv_apps"  type = "face_detection">
+  <remap from="image" to = "/usb_cam/image_raw"/>
+  <param name ="debug_view" value = "true" type = "bool"/>
+  <param name="face_cascade_name" value="/opt/ros/kinetic/share/OpenCV-3.2.0-dev/haarcascades/haarcascade_frontalface_alt.xml" />
+  <param name="eyes_cascade_name" value="/opt/ros/kinetic/share/OpenCV-3.2.0-dev/haarcascades/haarcascade_eye_tree_eyeglasses.xml" />
+  </node>
+
+  <node name="face_recognition" pkg="opencv_apps" type="face_recognition"
+        output="screen">
+    <param name="data_dir" value="$(arg data_dir)" />
+    <remap from="image" to="$(arg image)" />
+    <remap from="faces" to="face_detection/faces" />
+  </node>
+
+  <node name="face_recognition_trainer" pkg="opencv_apps" type="face_recognition_trainer.py"
+        if="$(arg launch_trainer)" launch-prefix="xterm -fn 12x24 -e" respawn="true">
+    <remap from="image" to="$(arg image)" />
+    <remap from="faces" to="face_detection/faces" />
+    <remap from="train" to="face_recognition/train" />
+  </node>
+
+  <node name="$(anon debug_image_viewer)" pkg="image_view" type="image_view"
+        if="$(arg debug_view)">
+    <remap from="image" to="face_recognition/debug_image" />
+  </node>
+
+<!-- Mando_brazos -->
+  <node name="tts" pkg="RISSA" type="hablar.py" output="screen">
+  </node>
+
+<!-- Mando_brazos -->
+  <node name="tacos" pkg="RISSA" type="tacos_google.py" output="screen">
+  </node>
+
+  <!-- cantar -->
+  <node  pkg="RISSA" type="cancion.py" name="cancion" output="screen"/>
+
+<!-- cantar2-->
+
+  <node  pkg="RISSA" type="cantar.sh" name="cantar" output="screen"/>
+
+<!-- Voz-->
+
+  <node  pkg="RISSA" type="Reconocedor.py" name="Reconocer_voz" output="screen"/>
+
+
+</launch>
